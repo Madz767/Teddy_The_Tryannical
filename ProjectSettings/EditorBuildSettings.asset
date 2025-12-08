@@ -6,8 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Tutorial_Chest.unity
+    guid: d6bacd532563b574a8fdb50f3ec031cd
+  - enabled: 1
     path: Assets/Scenes/HubWorld.unity
     guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/UnderBed.unity
+    guid: 98867df5ad3ecd443941a0c8b4f09287
+  - enabled: 1
+    path: Assets/Scenes/Windowton.unity
+    guid: d8f026b95f2329548b843968915d92ab
+  - enabled: 1
+    path: Assets/Scenes/PlayTown.unity
+    guid: 027df794c3592be4093e92d10b81bb31
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 3590b91b4603b465dbb4216d601bff33, type: 3}
   m_UseUCBPForAssetBundles: 0
