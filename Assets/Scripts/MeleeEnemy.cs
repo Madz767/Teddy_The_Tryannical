@@ -10,29 +10,54 @@ public enum EnemyType
 
 public class MeleeEnemy : MonoBehaviour
 {
+
+    //=========================================
+    //           Enemy Configuration
+    //           Melee Types
+    //           1. Base Melee (dash attack)
+    //           2. Tank Melee (AOE slam)
+    //=========================================
+    //what this handles: enemy that detects player, moves toward them, and attacks based on type
+    //why this is separate: different behavior from ranged enemies, modular for different melee types
+    //what this interacts with: Player for tracking and attacking
+
+    //if you have any questions, you know how to reach me - Madz767 :)... what do you mean I can't use that name
+    //ugh fine, - Todd... fine still have your smile :)
+
+    //setting this up to be used for two different enemy types, base melee and tank melee
     [Header("Setup")]
     public EnemyType enemyType;
     public Transform player;
     public Rigidbody2D rb;
 
-    [Header("Detection / Attack")]
+    [Header("Ranges")]
     public float detectRange = 7f;
-    public float attackRange = 1.2f;
-    public float attackCooldown = 1f;
-
-    private float attackTimer = 0f;
+    public float attackRange = 1.3f;
 
     [Header("Stats")]
     public float moveSpeed;
     public int maxHealth;
     public int damage;
 
+    [Header("Attack Timing")]
+    public float attackCooldown = 1.5f;
+    protected float attackTimer;
+
+    [Header("Dash (Base Melee)")]
+    public float dashSpeed = 10f;
+    public float dashDuration = 0.25f;
+
+    [Header("AOE (Tank Melee)")]
+    public float aoeRadius = 2f;
+    public float slamDelay = 0.6f;
+
     private int currentHealth;
+    private bool isAttacking;
+    private Vector2 dashDirection;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-
         LoadStats(enemyType);
         currentHealth = maxHealth;
     }
@@ -42,7 +67,7 @@ public class MeleeEnemy : MonoBehaviour
     {
         attackTimer -= Time.deltaTime;
 
-        if (player == null)
+        if (player == null || isAttacking)
             return;
 
         float distance = Vector2.Distance(transform.position, player.position);
@@ -68,17 +93,21 @@ public class MeleeEnemy : MonoBehaviour
         switch (type)
         {
             case EnemyType.BaseMelee:
-                moveSpeed = 2.5f;
+                moveSpeed = 3f;
                 maxHealth = 40;
                 damage = 10;
-                attackCooldown = 1.0f;
+                attackCooldown = 1.2f;
+                dashSpeed = 12f;
+                dashDuration = 0.25f;
                 break;
 
             case EnemyType.TankMelee:
-                moveSpeed = 1.2f;
-                maxHealth = 120;
+                moveSpeed = 1.3f;
+                maxHealth = 140;
                 damage = 20;
-                attackCooldown = 2.2f;
+                attackCooldown = 2.5f;
+                aoeRadius = 2.2f;
+                slamDelay = 0.7f;
                 break;
         }
     }
@@ -87,7 +116,6 @@ public class MeleeEnemy : MonoBehaviour
     private void MoveTowardPlayer()
     {
         Vector2 direction = (player.position - transform.position).normalized;
-
         rb.MovePosition(rb.position + direction * moveSpeed * Time.deltaTime);
     }
 
@@ -108,12 +136,63 @@ public class MeleeEnemy : MonoBehaviour
 
         attackTimer = attackCooldown;
 
-        // Call your animation event or hit detection here
-        Debug.Log(enemyType + " attacks for " + damage + " damage.");
+        if (enemyType == EnemyType.BaseMelee)
+            StartCoroutine(DashAttack());
+        else
+            StartCoroutine(AOESlam());
 
-        // Example: damaging player
-        // player.GetComponent<PlayerHealth>().TakeDamage(damage);
+
     }
+
+    private System.Collections.IEnumerator DashAttack()
+    {
+        isAttacking = true;
+        dashDirection = (player.position - transform.position).normalized;
+
+        float elapsed = 0f;
+
+        while (elapsed < dashDuration)
+        {
+            rb.linearVelocity = dashDirection * dashSpeed;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        rb.linearVelocity = Vector2.zero;
+
+        // Damage check
+        if (Vector2.Distance(transform.position, player.position) <= attackRange)
+        {
+            // player.GetComponent<PlayerHealth>().TakeDamage(damage);
+            Debug.Log("Base Melee Dash Hit!");
+        }
+
+        isAttacking = false;
+    }
+
+    private System.Collections.IEnumerator AOESlam()
+    {
+        isAttacking = true;
+        rb.linearVelocity = Vector2.zero;
+
+        // Wind-up delay
+        yield return new WaitForSeconds(slamDelay);
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, aoeRadius);
+
+        foreach (Collider2D hit in hits)
+        {
+            if (hit.CompareTag("Player"))
+            {
+                // hit.GetComponent<PlayerHealth>().TakeDamage(damage);
+                Debug.Log("Tank Slam Hit Player!");
+            }
+        }
+
+        isAttacking = false;
+    }
+
+
 
     public void TakeDamage(int amount)
     {
@@ -126,5 +205,18 @@ public class MeleeEnemy : MonoBehaviour
     private void Die()
     {
         Destroy(gameObject);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+
+        //this draws the attack range for the AOE the tank uses
+        //this will only show up in the editor when the tank melee is selected
+        //this will help us with tweeking the radius to what fits best
+        if (enemyType == EnemyType.TankMelee)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, aoeRadius);
+        }
     }
 }

@@ -1,5 +1,16 @@
 using UnityEngine;
 
+
+//==========================================
+//           Ranged Enemy
+//==========================================
+//what this handles: enemy that detects player, rotates to face them, and shoots projectiles
+//why this is separate: because it was easier to manage separately than with melee enemies
+//what this interacts with: Player for tracking, Projectile for shooting
+
+
+
+
 public class RangedEnemy : MonoBehaviour
 {
     [Header("Targeting")]

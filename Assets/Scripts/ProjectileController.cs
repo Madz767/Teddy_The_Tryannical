@@ -1,5 +1,11 @@
 using UnityEngine;
 
+//==========================================
+//           Projectile Controller
+//==========================================
+// It's a projectile... that's all it does....
+// no major notes here
+
 public class ProjectileController : MonoBehaviour
 {
     public float lifeTime = 5f;

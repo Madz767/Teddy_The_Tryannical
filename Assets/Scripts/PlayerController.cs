@@ -5,6 +5,10 @@ using UnityEngine.InputSystem;
 /// Simple player controller for 2D top-down action RPG
 /// WASD movement, left click attack, right click special attack
 /// </summary>
+
+//I like your summary -Todd :)
+
+
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
@@ -19,6 +23,7 @@ public class PlayerController : MonoBehaviour
     private Camera mainCamera;
     private Vector2 moveInput;
     
+    private PlayerAttackController attackController;
     private float attackTimer;
     private float specialAttackTimer;
     
@@ -31,8 +36,12 @@ public class PlayerController : MonoBehaviour
         rb.gravityScale = 0f;
         rb.linearDamping = 10f;
         rb.freezeRotation = true;
+
+        //configure attack controller
+        attackController = GetComponent<PlayerAttackController>();
+
     }
-    
+
     private void Update()
     {
         HandleMovementInput();
@@ -88,43 +97,38 @@ public class PlayerController : MonoBehaviour
         if (specialAttackTimer > 0f)
             specialAttackTimer -= Time.deltaTime;
     }
-    
+
     private void PerformAttack()
     {
         attackTimer = attackCooldown;
-        
-        Vector2 mouseWorldPos = GetMouseWorldPosition();
-        Vector2 attackDirection = (mouseWorldPos - (Vector2)transform.position).normalized;
-        
-        // Rotate player to face attack direction
-        if (attackDirection.magnitude > 0.1f)
-        {
-            float angle = Mathf.Atan2(attackDirection.y, attackDirection.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-        }
-        
-        // TODO: Add your attack logic here (spawn projectile, play animation, etc.)
-        Debug.Log("Attack!");
+
+        Vector2 direction = GetDirectionToMouse();
+        RotateToDirection(direction);
+
+        attackController.BasicAttack(direction);
     }
-    
+
     private void PerformSpecialAttack()
     {
+
+        //created a new script to handle the attack logic
+        //this helps us to keep this to a more readable size
+        //the only downside is that you can easily get lost jumping between scripts
+        //So... note time
+
+        //Note: special and basic attack logic moved to PlayerAttackController
+        //which also pulls data from PlayerWeaponController to determine damage/range/etc
+        //this allows us to make different weapons with different stats easily
+        //just be careful not to get lost in the sauce....
+
         specialAttackTimer = specialAttackCooldown;
-        
-        Vector2 mouseWorldPos = GetMouseWorldPosition();
-        Vector2 attackDirection = (mouseWorldPos - (Vector2)transform.position).normalized;
-        
-        // Rotate player to face attack direction
-        if (attackDirection.magnitude > 0.1f)
-        {
-            float angle = Mathf.Atan2(attackDirection.y, attackDirection.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-        }
-        
-        // TODO: Add your special attack logic here (spawn special projectile, play animation, etc.)
-        Debug.Log("Special Attack!");
+
+        Vector2 direction = GetDirectionToMouse();
+        RotateToDirection(direction);
+
+        attackController.SpecialAttack(direction);
     }
-    
+
     private Vector2 GetMouseWorldPosition()
     {
         if (mainCamera == null)
@@ -155,4 +159,15 @@ public class PlayerController : MonoBehaviour
         Vector2 mouseWorldPos = GetMouseWorldPosition();
         return (mouseWorldPos - (Vector2)transform.position).normalized;
     }
+
+    private void RotateToDirection(Vector2 direction)
+    {
+        if (direction.magnitude < 0.1f)
+            return;
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+    }
+
+
 }
