@@ -13,7 +13,7 @@ using UnityEngine;
 
 
 [CreateAssetMenu(menuName = "Weapons/Melee Weapon")]
-public class WeaponData : MonoBehaviour
+public class WeaponData : ScriptableObject
 {
     public string weaponID;
     public string weaponName;

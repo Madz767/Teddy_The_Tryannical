@@ -10,6 +10,8 @@ using UnityEngine.InputSystem;
 
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(PlayerAttackController))]
+[RequireComponent(typeof(PlayerHealth))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]

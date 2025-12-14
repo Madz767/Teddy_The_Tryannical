@@ -60,6 +60,16 @@ public class MeleeEnemy : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         LoadStats(enemyType);
         currentHealth = maxHealth;
+        
+        // Auto-find player if not assigned
+        if (player == null)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                player = playerObj.transform;
+            }
+        }
     }
 
 
@@ -163,8 +173,24 @@ public class MeleeEnemy : MonoBehaviour
         // Damage check
         if (Vector2.Distance(transform.position, player.position) <= attackRange)
         {
-            // player.GetComponent<PlayerHealth>().TakeDamage(damage);
-            Debug.Log("Base Melee Dash Hit!");
+            if (player == null)
+            {
+                Debug.LogError("MeleeEnemy: Player Transform reference is null!");
+                isAttacking = false;
+                yield break;
+            }
+
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth == null)
+            {
+                // Try getting from gameObject
+                playerHealth = player.gameObject.GetComponent<PlayerHealth>();
+            }
+            
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(damage);
+            }
         }
 
         isAttacking = false;
@@ -184,8 +210,17 @@ public class MeleeEnemy : MonoBehaviour
         {
             if (hit.CompareTag("Player"))
             {
-                // hit.GetComponent<PlayerHealth>().TakeDamage(damage);
-                Debug.Log("Tank Slam Hit Player!");
+                PlayerHealth playerHealth = hit.GetComponent<PlayerHealth>();
+                if (playerHealth == null)
+                {
+                    // Try getting from the GameObject directly
+                    playerHealth = hit.gameObject.GetComponent<PlayerHealth>();
+                }
+                
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(damage);
+                }
             }
         }
 

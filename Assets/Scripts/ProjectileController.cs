@@ -21,8 +21,7 @@ public class ProjectileController : MonoBehaviour
         // Example: damage player
         if (other.collider.CompareTag("Player"))
         {
-            // Call your player's damage function here
-            // other.collider.GetComponent<PlayerHealth>().TakeDamage(damage);
+            other.collider.GetComponent<PlayerHealth>()?.TakeDamage(damage);
             Destroy(gameObject);
         }
 

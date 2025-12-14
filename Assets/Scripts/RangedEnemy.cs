@@ -24,7 +24,17 @@ public class RangedEnemy : MonoBehaviour
     public float shootCooldown = 1.5f;
     public float projectileSpeed = 12f;
 
+    [Header("Stats")]
+    public int maxHealth = 30;
+    public int damage = 8;
+
     private float shootTimer = 0f;
+    private int currentHealth;
+
+    private void Start()
+    {
+        currentHealth = maxHealth;
+    }
 
     // Update is called once per frame
     void Update()
@@ -70,5 +80,18 @@ public class RangedEnemy : MonoBehaviour
         {
             rb.linearVelocity = firePoint.right * projectileSpeed; 
         }
+    }
+
+    public void TakeDamage(int amount)
+    {
+        currentHealth -= amount;
+
+        if (currentHealth <= 0)
+            Die();
+    }
+
+    private void Die()
+    {
+        Destroy(gameObject);
     }
 }

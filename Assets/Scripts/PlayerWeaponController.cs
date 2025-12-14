@@ -21,7 +21,13 @@ public class PlayerWeaponController : MonoBehaviour
     private void Start()
     {
         if (ownedWeapons.Count > 0)
+        {
             EquipWeapon(0);
+        }
+        else
+        {
+            Debug.LogWarning("PlayerWeaponController: No weapons in ownedWeapons list! Add at least one weapon in the Inspector.");
+        }
     }
 
     public void AddWeapon(WeaponData newWeapon)
@@ -51,7 +57,6 @@ public class PlayerWeaponController : MonoBehaviour
     private void EquipWeapon(int index)
     {
         currentWeapon = ownedWeapons[index];
-        Debug.Log("Equipped: " + currentWeapon.weaponName);
     }
 
 
