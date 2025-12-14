@@ -20,6 +20,19 @@ using System.Collections.Generic;
 
 
 
+public enum sceneID
+{
+    //these are the different scenes in the game
+    //used for scene management and loading
+    MainMenu,
+    Tutorial_Chest,
+    HubWorld,
+    UnderBed,
+    Windowton,
+    PlayTown
+}
+
+
 
 public enum GameState
 {
@@ -36,6 +49,7 @@ public enum GameState
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+    
 
     //this will help us track collected chests across scenes
     //also, using a HashSet helps avoid duplicates

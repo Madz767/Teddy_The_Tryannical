@@ -31,9 +31,41 @@ public class RangedEnemy : MonoBehaviour
     private float shootTimer = 0f;
     private int currentHealth;
 
+    private void Awake()
+    {
+        // ensure references that should always exist are set
+        if (firePoint == null)
+            firePoint = transform;
+    }
+
     private void Start()
     {
         currentHealth = maxHealth;
+
+        if (player == null)
+            StartCoroutine(EnsurePlayerAssigned());
+    }
+
+    private System.Collections.IEnumerator EnsurePlayerAssigned()
+    {
+        while (player == null)
+        {
+            var pObj = GameObject.FindGameObjectWithTag("Player");
+            if (pObj != null)
+            {
+                player = pObj.transform;
+                yield break;
+            }
+
+            var pc = FindObjectOfType<PlayerController>();
+            if (pc != null)
+            {
+                player = pc.transform;
+                yield break;
+            }
+
+            yield return null;
+        }
     }
 
     // Update is called once per frame
@@ -74,6 +106,8 @@ public class RangedEnemy : MonoBehaviour
     }
     void Shoot()
     {
+        if (projectilePrefab == null || firePoint == null) return;
+
         GameObject proj = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
 
         if (proj.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))

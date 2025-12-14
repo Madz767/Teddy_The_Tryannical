@@ -55,23 +55,43 @@ public class MeleeEnemy : MonoBehaviour
     private bool isAttacking;
     private Vector2 dashDirection;
 
-    private void Start()
+    private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
-        LoadStats(enemyType);
-        currentHealth = maxHealth;
-        
-        // Auto-find player if not assigned
-        if (player == null)
-        {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                player = playerObj.transform;
-            }
-        }
+        if (rb == null) rb = GetComponent<Rigidbody2D>();
     }
 
+    private void Start()
+    {
+        LoadStats(enemyType);
+        currentHealth = maxHealth;
+
+        // Try to find player, and keep trying until it exists
+        if (player == null)
+            StartCoroutine(EnsurePlayerAssigned());
+    }
+
+    private System.Collections.IEnumerator EnsurePlayerAssigned()
+    {
+        // First try tag-based find, then fall back to finding PlayerController
+        while (player == null)
+        {
+            var pObj = GameObject.FindGameObjectWithTag("Player");
+            if (pObj != null)
+            {
+                player = pObj.transform;
+                yield break;
+            }
+
+            var pc = FindFirstObjectByType<PlayerController>();
+            if (pc != null)
+            {
+                player = pc.transform;
+                yield break;
+            }
+
+            yield return null;
+        }
+    }
 
     private void Update()
     {
