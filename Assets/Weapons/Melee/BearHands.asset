@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7279100209684d04c989a4550e1ac94b, type: 3}
   m_Name: BearHands
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
-  weaponID: 
-  weaponName: 
-  basicDamage: 0
-  basicCooldown: 0
-  basicRange: 0
+  weaponID: 1
+  weaponName: Bear Hands
+  basicDamage: 10
+  basicCooldown: 1
+  basicRange: 1.5
   specialDamage: 0
   specialCooldown: 0
   specialRange: 0
