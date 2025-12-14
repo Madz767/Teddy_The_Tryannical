@@ -9,7 +9,7 @@ using UnityEngine;
 
 
 
-public class ChestSctipt : MonoBehaviour
+public class ChestScript : MonoBehaviour
 {
 
 
@@ -53,7 +53,7 @@ public class ChestSctipt : MonoBehaviour
 
         //this is the chest checking if it has been collected before
         //allowing for persistence across scenes
-        if (GameManager.Instance.collectedChests.Contains(chestID))
+        if (GameManager.Instance != null && GameManager.Instance.collectedChests.Contains(chestID))
         {
             isOpen = true;
             hasDropped = true;
@@ -87,7 +87,10 @@ public class ChestSctipt : MonoBehaviour
             hasDropped = true;
         }
 
-        GameManager.Instance.collectedChests.Add(chestID);
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.collectedChests.Add(chestID);
+        }
         UpdateVisual();
     }
 

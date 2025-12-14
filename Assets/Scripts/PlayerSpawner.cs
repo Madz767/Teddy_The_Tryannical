@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 //==========================================
@@ -37,6 +38,14 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         Instance = this;
+        
+        // DontDestroyOnLoad only works on root GameObjects
+        // If this GameObject is not a root, move it to root first
+        if (transform.parent != null)
+        {
+            transform.SetParent(null);
+        }
+        
         DontDestroyOnLoad(gameObject);
 
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -81,30 +90,111 @@ public class PlayerSpawner : MonoBehaviour
             }
         }
 
-        // Find destination by PortalDestination component
-        var destinations = FindObjectsOfType<PortalDestination>();
+        // Find destination by PortalDestination component (case-insensitive)
+        var destinations = FindObjectsByType<PortalDestination>(FindObjectsSortMode.None);
         foreach (var dest in destinations)
         {
-            if (string.Equals(dest.id, PendingDestinationId, System.StringComparison.Ordinal))
+            // Try exact match first (case-insensitive)
+            if (string.Equals(dest.id, PendingDestinationId, System.StringComparison.OrdinalIgnoreCase))
             {
                 playerObj.transform.position = dest.transform.position;
                 playerObj.transform.rotation = dest.transform.rotation;
+                Debug.Log($"[PlayerSpawner] Successfully placed player at destination '{PendingDestinationId}' (position: {dest.transform.position}).");
                 PendingDestinationId = null;
+                
+                // Set global portal cooldown to prevent immediate re-triggering if player is placed inside a portal trigger
+                Portal.SetGlobalCooldown(1.5f);
+                
+                // Notify camera that player has been placed
+                Cameramanager.NotifyPlayerPlaced();
+                return;
+            }
+            
+            // Try matching with underscores normalized (e.g., "Hub_World_Enter" matches "HubWorld_Enter")
+            string normalizedSearchId = PendingDestinationId.Replace("_", "");
+            string normalizedDestId = dest.id.Replace("_", "");
+            if (string.Equals(normalizedDestId, normalizedSearchId, System.StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.Log($"[PlayerSpawner] Found destination using normalized match: '{dest.id}' matches search '{PendingDestinationId}'");
+                playerObj.transform.position = dest.transform.position;
+                playerObj.transform.rotation = dest.transform.rotation;
+                Debug.Log($"[PlayerSpawner] Successfully placed player at destination '{dest.id}' (position: {dest.transform.position}).");
+                PendingDestinationId = null;
+                
+                // Set global portal cooldown to prevent immediate re-triggering if player is placed inside a portal trigger
+                Portal.SetGlobalCooldown(1.5f);
+                
+                // Notify camera that player has been placed
+                Cameramanager.NotifyPlayerPlaced();
                 return;
             }
         }
 
-        // Fallback: try to find a GameObject by name
-        var go = GameObject.Find(PendingDestinationId);
+        // Fallback: try to find a GameObject by name (case-insensitive)
+        GameObject go = GameObject.Find(PendingDestinationId);
+        if (go == null)
+        {
+            // Try case-insensitive search through all GameObjects
+            var allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+            foreach (var obj in allObjects)
+            {
+                // Try exact match
+                if (string.Equals(obj.name, PendingDestinationId, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    go = obj;
+                    break;
+                }
+                
+                // Try normalized match (underscores removed)
+                string normalizedSearchId = PendingDestinationId.Replace("_", "");
+                string normalizedObjName = obj.name.Replace("_", "");
+                if (string.Equals(normalizedObjName, normalizedSearchId, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.Log($"[PlayerSpawner] Found GameObject using normalized match: '{obj.name}' matches search '{PendingDestinationId}'");
+                    go = obj;
+                    break;
+                }
+            }
+        }
+        
         if (go != null)
         {
             playerObj.transform.position = go.transform.position;
             playerObj.transform.rotation = go.transform.rotation;
+            Debug.Log($"[PlayerSpawner] Placed player at GameObject '{PendingDestinationId}' (position: {go.transform.position}). " +
+                     $"NOTE: Consider adding a PortalDestination component to '{go.name}' for better portal system consistency.");
             PendingDestinationId = null;
+            
+            // Set global portal cooldown to prevent immediate re-triggering if player is placed inside a portal trigger
+            Portal.SetGlobalCooldown(1.5f);
+            
+            // Notify camera that player has been placed
+            Cameramanager.NotifyPlayerPlaced();
             return;
         }
 
-        Debug.LogWarning($"[PlayerSpawner] Destination '{PendingDestinationId}' not found in scene.");
+        // Log available destinations for debugging
+        var availableIds = destinations.Select(d => d.id).ToArray();
+        var availableGameObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None)
+            .Where(obj => obj.name.Contains("Entrance") || obj.name.Contains("Exit") || obj.name.Contains("Portal"))
+            .Select(obj => obj.name)
+            .Distinct()
+            .ToArray();
+        
+        string availableInfo = "";
+        if (availableIds.Length > 0)
+        {
+            availableInfo = $"PortalDestinations: {string.Join(", ", availableIds)}";
+        }
+        if (availableGameObjects.Length > 0)
+        {
+            if (availableInfo.Length > 0) availableInfo += " | ";
+            availableInfo += $"Potential GameObjects: {string.Join(", ", availableGameObjects)}";
+        }
+        
+        Debug.LogWarning($"[PlayerSpawner] Destination '{PendingDestinationId}' not found in scene '{scene.name}'. " +
+                        $"{(availableInfo.Length > 0 ? availableInfo : "No destinations found.")} " +
+                        $"Make sure the destination has a PortalDestination component with matching id, or a GameObject with matching name.");
         PendingDestinationId = null;
     }
 }

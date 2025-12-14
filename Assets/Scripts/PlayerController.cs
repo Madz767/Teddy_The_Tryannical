@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Simple player controller for 2D top-down action RPG
@@ -16,6 +17,8 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
+    [Tooltip("Speed multiplier applied when player is in HubWorld scene. Set to 1 for normal speed, 2 for double speed, etc.")]
+    [SerializeField] private float hubWorldSpeedMultiplier = 2f;
     
     [Header("Combat")]
     [SerializeField] private float attackCooldown = 0.5f;
@@ -26,8 +29,12 @@ public class PlayerController : MonoBehaviour
     private Vector2 moveInput;
     
     private PlayerAttackController attackController;
+    private PlayerHealth playerHealth;
     private float attackTimer;
     private float specialAttackTimer;
+    
+    private float baseMoveSpeed;
+    private string currentSceneName;
     
     private void Awake()
     {
@@ -41,14 +48,48 @@ public class PlayerController : MonoBehaviour
 
         //configure attack controller
         attackController = GetComponent<PlayerAttackController>();
-
+        
+        // Get player health component
+        playerHealth = GetComponent<PlayerHealth>();
+        
+        // Store base move speed
+        baseMoveSpeed = moveSpeed;
+        currentSceneName = SceneManager.GetActiveScene().name;
+        UpdateMoveSpeedForScene();
     }
 
     private void Update()
     {
+        // Don't process input if player is dead
+        if (playerHealth != null && playerHealth.IsDead())
+        {
+            return;
+        }
+        
+        // Check if scene changed and update movement speed accordingly
+        string newSceneName = SceneManager.GetActiveScene().name;
+        if (newSceneName != currentSceneName)
+        {
+            currentSceneName = newSceneName;
+            UpdateMoveSpeedForScene();
+        }
+        
         HandleMovementInput();
         HandleCombatInput();
         UpdateCooldowns();
+    }
+    
+    private void UpdateMoveSpeedForScene()
+    {
+        // Apply speed multiplier in HubWorld
+        if (currentSceneName == "HubWorld")
+        {
+            moveSpeed = baseMoveSpeed * hubWorldSpeedMultiplier;
+        }
+        else
+        {
+            moveSpeed = baseMoveSpeed;
+        }
     }
     
     private void FixedUpdate()

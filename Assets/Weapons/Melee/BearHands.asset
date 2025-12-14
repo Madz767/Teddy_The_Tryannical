@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponID: 1
   weaponName: Bear Hands
-  basicDamage: 10
+  basicDamage: 50
   basicCooldown: 1
   basicRange: 1.5
   specialDamage: 0

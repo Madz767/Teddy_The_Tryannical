@@ -17,6 +17,7 @@ public class PlayerHealth : MonoBehaviour
     public int maxHealth = 100;
     
     private int currentHealth;
+    private bool isDead = false;
     
     // Event for health changes (for UI updates)
     public System.Action<int, int> OnHealthChanged;
@@ -29,6 +30,10 @@ public class PlayerHealth : MonoBehaviour
     
     public void TakeDamage(int amount)
     {
+        // Don't take damage if already dead
+        if (isDead)
+            return;
+        
         currentHealth -= amount;
         
         if (currentHealth <= 0)
@@ -52,9 +57,42 @@ public class PlayerHealth : MonoBehaviour
     
     private void Die()
     {
+        // Prevent multiple death calls
+        if (isDead)
+            return;
+        
+        isDead = true;
+        
+        // Disable player movement and combat
+        PlayerController playerController = GetComponent<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.enabled = false;
+        }
+        
+        // Disable player attack controller
+        PlayerAttackController attackController = GetComponent<PlayerAttackController>();
+        if (attackController != null)
+        {
+            attackController.enabled = false;
+        }
+        
+        // Disable Rigidbody2D to stop movement
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.simulated = false;
+        }
+        
+        // Notify GameManager to trigger game over
         if (GameManager.Instance != null)
         {
             GameManager.Instance.PlayerDied();
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerHealth] GameManager.Instance is null! Cannot trigger game over.");
         }
     }
     
@@ -71,6 +109,41 @@ public class PlayerHealth : MonoBehaviour
     public float GetHealthPercentage()
     {
         return (float)currentHealth / maxHealth;
+    }
+    
+    public bool IsDead()
+    {
+        return isDead;
+    }
+    
+    /// <summary>
+    /// Resets the player's health and death state (useful for respawning)
+    /// </summary>
+    public void Respawn()
+    {
+        isDead = false;
+        currentHealth = maxHealth;
+        
+        // Re-enable components
+        PlayerController playerController = GetComponent<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.enabled = true;
+        }
+        
+        PlayerAttackController attackController = GetComponent<PlayerAttackController>();
+        if (attackController != null)
+        {
+            attackController.enabled = true;
+        }
+        
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.simulated = true;
+        }
+        
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 }
 

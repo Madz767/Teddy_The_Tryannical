@@ -16,8 +16,13 @@ using UnityEngine.SceneManagement;
 //what this interacts with:
 // - Scene enum (sceneID) or scene name resolution and Application.CanStreamedLevelBeLoaded validation.
 // - CanvasGroup (fade UI) and any UI that listens to transition events.
-// - SceneManagersBootstrapper (ensures the manager exists on startup).
 // - Callers like Portal, UI, or GameManager that request scene changes.
+//
+//SETUP INSTRUCTIONS:
+// 1. Create a GameObject named "SceneTransitionManager" (or add to your "Managers" GameObject)
+// 2. Add the SceneTransitionManager component to it
+// 3. Optionally assign a CanvasGroup for fade transitions (or leave null to auto-create)
+// 4. The GameObject will persist across scenes automatically (DontDestroyOnLoad)
 
 [DisallowMultipleComponent]
 public class SceneTransitionManager : MonoBehaviour

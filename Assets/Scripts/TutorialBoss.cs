@@ -22,8 +22,8 @@ using UnityEngine;
 public class TutorialBoss : MonoBehaviour
 {
     // Simple boss with two moves:
-    // 1) Melee Slam — short wind-up, AOE damage around boss.
-    // 2) Ranged Volley — fires a burst of projectiles in the player's direction.
+    // 1) Melee Slam ï¿½ short wind-up, AOE damage around boss.
+    // 2) Ranged Volley ï¿½ fires a burst of projectiles in the player's direction.
 
     [Header("References")]
     [SerializeField] private Transform player;
@@ -35,12 +35,16 @@ public class TutorialBoss : MonoBehaviour
     [SerializeField] private float detectionRange = 12f;
     [SerializeField] private float chaseSpeed = 3.5f;
 
+    [Header("Stats")]
+    [SerializeField] private int maxHealth = 300;
+    [SerializeField] private int meleeDamage = 20;
+    [SerializeField] private int projectileDamage = 8;
+
     [Header("Melee Slam")]
     [SerializeField] private float meleeRange = 1.8f;
     [SerializeField] private float meleeWindup = 0.5f;
     [SerializeField] private float meleeCooldown = 2.0f;
     [SerializeField] private float meleeAOERadius = 2.0f;
-    [SerializeField] private int meleeDamage = 20;
 
     [Header("Ranged Volley")]
     [SerializeField] private float rangedRange = 10f;
@@ -48,13 +52,12 @@ public class TutorialBoss : MonoBehaviour
     [SerializeField] private int volleyCount = 3;
     [SerializeField] private float volleyDelayBetweenShots = 0.12f;
     [SerializeField] private float projectileSpeed = 12f;
-    [SerializeField] private int projectileDamage = 8;
     [SerializeField, Range(0f, 90f)] private float volleySpreadAngle = 12f;
 
     private float meleeTimer;
     private float rangedTimer;
     private bool isAttacking;
-    private int currentHealth = 300;
+    private int currentHealth;
 
     private void Awake()
     {
@@ -71,6 +74,8 @@ public class TutorialBoss : MonoBehaviour
 
     private void Start()
     {
+        currentHealth = maxHealth;
+        
         if (player == null)
             StartCoroutine(EnsurePlayerAssigned());
     }
@@ -86,7 +91,7 @@ public class TutorialBoss : MonoBehaviour
                 yield break;
             }
 
-            var pc = FindObjectOfType<PlayerController>();
+            var pc = FindFirstObjectByType<PlayerController>();
             if (pc != null)
             {
                 player = pc.transform;

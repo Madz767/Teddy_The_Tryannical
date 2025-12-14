@@ -9,9 +9,13 @@ using System.Collections.Generic;
 //what this handles: overall game state management, scene loading, persistent data
 //why this is separate: centralizes game state logic, keeps other scripts cleaner
 //what this interacts with: PlayerController, UIManager, SceneManager
-
-
-//what still needs to be made: UImanager, Scene transitions, inventory system (needs more tweeking)
+//
+//SETUP INSTRUCTIONS:
+// 1. Create a GameObject named "GameManager" (or add to your "Managers" GameObject)
+// 2. Add the GameManager component to it
+// 3. The GameObject will persist across scenes automatically (DontDestroyOnLoad)
+//
+//what still needs to be made: inventory system (needs more tweeking)
 //and don't forget boss fights... only three don't worry, Tutorial level, underBed level. PlayTown level <--(fianal boss)
 //Who put me in charge here... can i sleep now? No? alright then...
 
@@ -91,6 +95,12 @@ public class GameManager : MonoBehaviour
                 Time.timeScale = 0f;
                 break;
         }
+        
+        // Notify UIManager of state change
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.OnGameStateChanged(newState);
+        }
     }
 
     public void LoadNextLevel(string sceneName)
@@ -107,6 +117,21 @@ public class GameManager : MonoBehaviour
     public void RestartLevel()
     {
         Time.timeScale = 1f;
+        
+        // Reset game state before loading scene
+        currentState = GameState.Playing;
+        
+        // Find and respawn player if it exists
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            PlayerHealth playerHealth = playerObj.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.Respawn();
+            }
+        }
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

@@ -57,7 +57,7 @@ public class RangedEnemy : MonoBehaviour
                 yield break;
             }
 
-            var pc = FindObjectOfType<PlayerController>();
+            var pc = FindFirstObjectByType<PlayerController>();
             if (pc != null)
             {
                 player = pc.transform;
