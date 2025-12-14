@@ -94,31 +94,12 @@ public class PlayerSpawner : MonoBehaviour
         var destinations = FindObjectsByType<PortalDestination>(FindObjectsSortMode.None);
         foreach (var dest in destinations)
         {
-            // Try exact match first (case-insensitive)
-            if (string.Equals(dest.id, PendingDestinationId, System.StringComparison.OrdinalIgnoreCase))
+            // Case-insensitive comparison using ToLower()
+            if (dest.id.ToLower() == PendingDestinationId.ToLower())
             {
                 playerObj.transform.position = dest.transform.position;
                 playerObj.transform.rotation = dest.transform.rotation;
                 Debug.Log($"[PlayerSpawner] Successfully placed player at destination '{PendingDestinationId}' (position: {dest.transform.position}).");
-                PendingDestinationId = null;
-                
-                // Set global portal cooldown to prevent immediate re-triggering if player is placed inside a portal trigger
-                Portal.SetGlobalCooldown(1.5f);
-                
-                // Notify camera that player has been placed
-                Cameramanager.NotifyPlayerPlaced();
-                return;
-            }
-            
-            // Try matching with underscores normalized (e.g., "Hub_World_Enter" matches "HubWorld_Enter")
-            string normalizedSearchId = PendingDestinationId.Replace("_", "");
-            string normalizedDestId = dest.id.Replace("_", "");
-            if (string.Equals(normalizedDestId, normalizedSearchId, System.StringComparison.OrdinalIgnoreCase))
-            {
-                Debug.Log($"[PlayerSpawner] Found destination using normalized match: '{dest.id}' matches search '{PendingDestinationId}'");
-                playerObj.transform.position = dest.transform.position;
-                playerObj.transform.rotation = dest.transform.rotation;
-                Debug.Log($"[PlayerSpawner] Successfully placed player at destination '{dest.id}' (position: {dest.transform.position}).");
                 PendingDestinationId = null;
                 
                 // Set global portal cooldown to prevent immediate re-triggering if player is placed inside a portal trigger
@@ -138,19 +119,9 @@ public class PlayerSpawner : MonoBehaviour
             var allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
             foreach (var obj in allObjects)
             {
-                // Try exact match
-                if (string.Equals(obj.name, PendingDestinationId, System.StringComparison.OrdinalIgnoreCase))
+                // Case-insensitive comparison using ToLower()
+                if (obj.name.ToLower() == PendingDestinationId.ToLower())
                 {
-                    go = obj;
-                    break;
-                }
-                
-                // Try normalized match (underscores removed)
-                string normalizedSearchId = PendingDestinationId.Replace("_", "");
-                string normalizedObjName = obj.name.Replace("_", "");
-                if (string.Equals(normalizedObjName, normalizedSearchId, System.StringComparison.OrdinalIgnoreCase))
-                {
-                    Debug.Log($"[PlayerSpawner] Found GameObject using normalized match: '{obj.name}' matches search '{PendingDestinationId}'");
                     go = obj;
                     break;
                 }
@@ -174,22 +145,53 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         // Log available destinations for debugging
-        var availableIds = destinations.Select(d => d.id).ToArray();
-        var availableGameObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None)
-            .Where(obj => obj.name.Contains("Entrance") || obj.name.Contains("Exit") || obj.name.Contains("Portal"))
-            .Select(obj => obj.name)
-            .Distinct()
-            .ToArray();
+        // Build list of available destination IDs
+        string availableIds = "";
+        for (int i = 0; i < destinations.Length; i++)
+        {
+            if (i > 0) availableIds += ", ";
+            availableIds += destinations[i].id;
+        }
+        
+        // Build list of potential GameObjects
+        var allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+        System.Collections.Generic.List<string> potentialNames = new System.Collections.Generic.List<string>();
+        foreach (var obj in allObjects)
+        {
+            if (obj.name.Contains("Entrance") || obj.name.Contains("Exit") || obj.name.Contains("Portal"))
+            {
+                // Check if we already added this name
+                bool alreadyAdded = false;
+                foreach (string name in potentialNames)
+                {
+                    if (name == obj.name)
+                    {
+                        alreadyAdded = true;
+                        break;
+                    }
+                }
+                if (!alreadyAdded)
+                {
+                    potentialNames.Add(obj.name);
+                }
+            }
+        }
         
         string availableInfo = "";
         if (availableIds.Length > 0)
         {
-            availableInfo = $"PortalDestinations: {string.Join(", ", availableIds)}";
+            availableInfo = "PortalDestinations: " + availableIds;
         }
-        if (availableGameObjects.Length > 0)
+        if (potentialNames.Count > 0)
         {
+            string potentialNamesStr = "";
+            for (int i = 0; i < potentialNames.Count; i++)
+            {
+                if (i > 0) potentialNamesStr += ", ";
+                potentialNamesStr += potentialNames[i];
+            }
             if (availableInfo.Length > 0) availableInfo += " | ";
-            availableInfo += $"Potential GameObjects: {string.Join(", ", availableGameObjects)}";
+            availableInfo += "Potential GameObjects: " + potentialNamesStr;
         }
         
         Debug.LogWarning($"[PlayerSpawner] Destination '{PendingDestinationId}' not found in scene '{scene.name}'. " +

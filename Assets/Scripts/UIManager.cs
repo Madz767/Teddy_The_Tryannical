@@ -304,15 +304,21 @@ public class UIManager : MonoBehaviour
 
     public GameObject GetPanel(UIPanelType panelType)
     {
-        return panelType switch
+        switch (panelType)
         {
-            UIPanelType.HUD => hudPanel,
-            UIPanelType.PauseMenu => pauseMenuPanel,
-            UIPanelType.Inventory => inventoryPanel,
-            UIPanelType.Settings => settingsPanel,
-            UIPanelType.GameOver => gameOverPanel,
-            _ => null
-        };
+            case UIPanelType.HUD:
+                return hudPanel;
+            case UIPanelType.PauseMenu:
+                return pauseMenuPanel;
+            case UIPanelType.Inventory:
+                return inventoryPanel;
+            case UIPanelType.Settings:
+                return settingsPanel;
+            case UIPanelType.GameOver:
+                return gameOverPanel;
+            default:
+                return null;
+        }
     }
 
     #endregion
