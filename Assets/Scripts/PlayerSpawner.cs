@@ -154,9 +154,9 @@ public class PlayerSpawner : MonoBehaviour
         }
         
         // Build list of potential GameObjects
-        var allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+        var sceneObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
         System.Collections.Generic.List<string> potentialNames = new System.Collections.Generic.List<string>();
-        foreach (var obj in allObjects)
+        foreach (var obj in sceneObjects)
         {
             if (obj.name.Contains("Entrance") || obj.name.Contains("Exit") || obj.name.Contains("Portal"))
             {
